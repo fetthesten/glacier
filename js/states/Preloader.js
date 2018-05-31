@@ -12,7 +12,6 @@ BasicGame.Preloader.prototype = {
 
 	init: function () {
 		this.preloadBar = null;
-		this.ready = false;
 	},
 
 	preload: function () {
@@ -27,27 +26,18 @@ BasicGame.Preloader.prototype = {
 
 		this.load.setPreloadSprite(this.preloadBar);
 		this.load.spritesheet('sprites', 'assets/images/trap_spr_01.png', 8, 8);
-
+		this.load.image('logo', 'assets/images/logo.png');
+		this.load.tilemap('map01', 'assets/maps/map01.json', null, Phaser.Tilemap.TILED_JSON);
 	},
 
 	create: function () {
-
-
-		//this.state.start('MainMenu');
-
-
 	},
 	update: function () 
 	{
-		// check if cache is ready here
-		/*if (this.cache.isSoundDecoded('bgm') && this.ready == false) {
+		if (this.load.hasLoaded) 
 		{
-			this.ready = true;
 			this.state.start('MainMenu');
-
 		}
-		*/
-		this.state.start('MainMenu');
 	}
 
 };

@@ -22,7 +22,6 @@ BasicGame.Boot.prototype = {
         //this.game.scale.setUserScale(3, 3);
         this.game.renderer.renderSession.roundPixels = true;
         Phaser.Canvas.setImageRenderingCrisp(this.game.canvas);
-        this.game.debug.font = '14px Arial';
     },
 
     preload: function () {

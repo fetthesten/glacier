@@ -24,12 +24,21 @@ BasicGame.Game = function (game) {
     //	But do consider them as being 'reserved words', i.e. don't create a property for your own game called "world" or you'll over-write the world reference.
 
     // game objects
-    this.renderTexture;
+
+    // player stuffs
     this.player;
-    this.jump;
+    this.playerSpeed=100;
+    this.jump;          // current jump accel amount
+    this.jumpHeight=80; // initial jump accel amount
+    this.jumpBoost=20;  // immediate boost when pressing jump
+    this.jumpDecel=25;  // amount of jump boost to subtract from this.jump each tick the button is held
+
+    // map stuffs
+    this.bg;
     this.map;
-    this.levels = { 0: null };
     this.layer;
+    this.currentLevel;
+    this.levelWidth;
     this.keys;
 };
 
@@ -37,14 +46,12 @@ BasicGame.Game.prototype = {
 
     create: function () 
     {
-        
+        this.bg = this.add.tileSprite(0, 0, this.game.width, this.game.height, 'sprites', 0);
 
-        this.map = this.game.add.tilemap();
-        this.game.cache.addTilemap('level1', null, this.getLevel(0), Phaser.Tilemap.CSV);
-        this.levels[0] = this.add.tilemap('level1', 8, 8);
-        this.levels[0].addTilesetImage('sprites', 'sprites', 8, 8);
-        this.levels[0].setCollisionBetween(1, 2);
-        this.layer = this.levels[0].createLayer(0);
+        this.map = this.game.add.tilemap('map01');
+        this.map.addTilesetImage('sprites', 'sprites');
+        this.map.setCollisionBetween(1, 2);
+        this.layer = this.map.createLayer(0);
         this.layer.resizeWorld();
         
         this.game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -67,9 +74,9 @@ BasicGame.Game.prototype = {
         this.player.body.velocity.x = 0;
 
         if (this.keys.left.isDown)
-            this.player.body.velocity.x = -150;
+            this.player.body.velocity.x = -this.playerSpeed;
         if (this.keys.right.isDown)
-            this.player.body.velocity.x = 150;
+            this.player.body.velocity.x = this.playerSpeed;
         
         if (!this.keys.up.isDown)
         {
@@ -77,11 +84,11 @@ BasicGame.Game.prototype = {
             this.jump = 0;
         }
         if (this.jump > 0)
-            this.jump-=5;
+            this.jump-= Math.min(this.jumpDecel, this.jump);
         if (this.keys.up.isDown && this.keys.up.repeats ==0 && (this.player.body.onFloor() || this.player.body.touching.down))
         {
-            this.jump = 40;
-            this.player.body.velocity.y = -10;
+            this.jump = this.jumpHeight;
+            this.player.body.velocity.y = -this.jumpBoost;
         }
         this.player.body.velocity.y -= this.jump;
         if (this.player.body.velocity.y !==0)
@@ -94,9 +101,7 @@ BasicGame.Game.prototype = {
             this.player.scale.x = -1;
         else if (this.player.body.velocity.x > 0)
             this.player.scale.x = 1;
-        this.game.debug.text('clientx' + this.input.activePointer.clientX + 'clienty' + this.input.activePointer.clientY, 16,16);
-        this.game.debug.text('mousex' + Math.floor(this.input.activePointer.x) + 'mousey' + Math.floor(this.input.activePointer.y), 16,32);
-        this.game.debug.text('repeats' + this.keys.up.repeats, 16, 40);
+        this.game.debug.text('mousex' + Math.floor(this.input.activePointer.x) + 'mousey' + Math.floor(this.input.activePointer.y), 4,10);
     },
     mapCollide: function(player, map)
     {
@@ -111,42 +116,5 @@ BasicGame.Game.prototype = {
 		//	Then let's go back to the main menu.
 		this.state.start('MainMenu');
 
-    },
-    getLevel: function(level)
-    {
-        var levels = ['','','','','',''];
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n';
-        levels[0] += '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n';
-        levels[0] += '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n';
-        levels[0] += '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n';
-        levels[0] += '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n';
-        levels[0] += '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n';
-        levels[0] += '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n';
-        levels[0] += '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n';
-        levels[0] += '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n';
-        levels[0] += '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0\n';
-        levels[0] += '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0\n';
-        levels[0] += '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-        levels[0] += '1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1\n';
-
-        return levels[level];
     }
-
 };
